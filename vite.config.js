@@ -80,6 +80,7 @@ function authTokenPlugin() {
 }
 
 export default defineConfig({
+  base: "/mds-admin-pages/",
   plugins: [react(), authTokenPlugin()],
   resolve: {
     alias: {
