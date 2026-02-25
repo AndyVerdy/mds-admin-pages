@@ -3,7 +3,9 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 // In dev, use Vite proxy (/api -> staging server). In prod, use full URL.
 const baseUrl = import.meta.env.DEV
   ? "/api"
-  : `https://${import.meta.env.VITE_SUBDOMAIN}.${import.meta.env.VITE_GATEWAY_DOMAIN}${import.meta.env.VITE_MONOLITH_PATH}`;
+  : (import.meta.env.VITE_GATEWAY_DOMAIN
+      ? `https://${import.meta.env.VITE_SUBDOMAIN}.${import.meta.env.VITE_GATEWAY_DOMAIN}${import.meta.env.VITE_MONOLITH_PATH}`
+      : "https://pavel.groupos-staging.co/api");
 
 export const api = createApi({
   reducerPath: "api",
