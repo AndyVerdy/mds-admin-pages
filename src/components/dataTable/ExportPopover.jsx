@@ -28,6 +28,12 @@ function getExportRows(table, onlySelected) {
 }
 
 function resolveValue(row, col) {
+  // Use custom export accessor if provided (for nested/computed data)
+  if (col.columnDef.meta?.exportValue) {
+    const val = col.columnDef.meta.exportValue(row);
+    if (val === null || val === undefined) return "";
+    return String(val);
+  }
   const key = col.columnDef.accessorKey;
   if (!key) return "";
   // walk dot-paths like "user_id.email"

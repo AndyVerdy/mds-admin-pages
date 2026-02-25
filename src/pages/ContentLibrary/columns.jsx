@@ -50,6 +50,9 @@ export function getColumns({ onAction }) {
       accessorKey: "video",
       header: "Video",
       enableSorting: true,
+      meta: {
+        exportValue: (row) => row?.title || "Untitled",
+      },
       cell: ({ row }) => {
         const video = row.original;
         const title = video?.title || "Untitled";
@@ -78,6 +81,12 @@ export function getColumns({ onAction }) {
       accessorKey: "views",
       header: "Views",
       enableSorting: true,
+      meta: {
+        exportValue: (row) => {
+          const views = row?.views;
+          return (row?.starting_view_cnt || 0) + (Array.isArray(views) ? views.length : 0);
+        },
+      },
       cell: ({ row }) => {
         const views = row.original?.views;
         const count =
@@ -94,6 +103,12 @@ export function getColumns({ onAction }) {
       accessorKey: "comments",
       header: "Comments",
       enableSorting: true,
+      meta: {
+        exportValue: (row) => {
+          const comments = row?.comments;
+          return Array.isArray(comments) ? comments.length : 0;
+        },
+      },
       cell: ({ row }) => {
         const comments = row.original?.comments;
         const count = Array.isArray(comments) ? comments.length : 0;
@@ -107,6 +122,12 @@ export function getColumns({ onAction }) {
     {
       accessorKey: "access",
       header: "Access",
+      meta: {
+        exportValue: (row) => {
+          const access = (row?.restrictionAccess || "public").toLowerCase();
+          return access === "restricted" ? "Restricted" : "Public";
+        },
+      },
       cell: ({ row }) => {
         const access = (
           row.original?.restrictionAccess || "public"
@@ -124,6 +145,12 @@ export function getColumns({ onAction }) {
       accessorKey: "createdAt",
       header: "Uploaded",
       enableSorting: true,
+      meta: {
+        exportValue: (row) => {
+          const p = formatDate(row?.createdAt);
+          return p ? `${p.date} ${p.time}` : "";
+        },
+      },
       cell: ({ row }) => {
         const parsed = formatDate(row.original?.createdAt);
         if (!parsed) {
@@ -145,6 +172,12 @@ export function getColumns({ onAction }) {
       accessorKey: "updatedAt",
       header: "Last update",
       enableSorting: true,
+      meta: {
+        exportValue: (row) => {
+          const p = formatDate(row?.updatedAt);
+          return p ? `${p.date} ${p.time}` : "";
+        },
+      },
       cell: ({ row }) => {
         const parsed = formatDate(row.original?.updatedAt);
         if (!parsed) {
@@ -166,6 +199,9 @@ export function getColumns({ onAction }) {
       accessorKey: "status",
       header: "Status",
       enableSorting: true,
+      meta: {
+        exportValue: (row) => getStatusInfo(row).label,
+      },
       cell: ({ row }) => {
         const { label, className } = getStatusInfo(row.original);
         return (

@@ -20,6 +20,12 @@ export function getColumns({ onCopyEmail, onAction }) {
       accessorKey: "fullName",
       header: "Name",
       enableSorting: true,
+      meta: {
+        exportValue: (row) => {
+          const u = row?.user_id;
+          return `${u?.first_name || ""} ${u?.last_name || ""}`.trim() || "";
+        },
+      },
       cell: ({ row }) => {
         const user = row.original?.user_id;
         const firstName = user?.first_name || "";
@@ -55,6 +61,9 @@ export function getColumns({ onCopyEmail, onAction }) {
     {
       accessorKey: "displayName",
       header: "Display name",
+      meta: {
+        exportValue: (row) => row?.user_id?.display_name || "",
+      },
       cell: ({ row }) => {
         const displayName = row.original?.user_id?.display_name;
         return (
@@ -67,6 +76,10 @@ export function getColumns({ onCopyEmail, onAction }) {
     {
       accessorKey: "Preferred_Email",
       header: "User email",
+      meta: {
+        exportValue: (row) =>
+          row?.user_id?.["Preferred Email"] || row?.user_id?.email || "",
+      },
       cell: ({ row }) => {
         const user = row.original?.user_id;
         const email = user?.["Preferred Email"] || user?.email;
@@ -88,6 +101,9 @@ export function getColumns({ onCopyEmail, onAction }) {
     {
       accessorKey: "membership",
       header: "Membership",
+      meta: {
+        exportValue: (row) => row?.tier_id?.name || "",
+      },
       cell: ({ row }) => {
         const tierName = row.original?.tier_id?.name;
         return (
@@ -101,6 +117,9 @@ export function getColumns({ onCopyEmail, onAction }) {
       accessorKey: "groupos_join_date",
       header: "Joined",
       enableSorting: true,
+      meta: {
+        exportValue: (row) => formatDate(row?.groupos_join_date),
+      },
       cell: ({ row }) => {
         const date = row.original?.groupos_join_date;
         return (
