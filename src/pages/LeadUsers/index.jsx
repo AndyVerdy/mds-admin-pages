@@ -5,7 +5,8 @@ import { Input } from "../../components/ui/input";
 import { TooltipProvider } from "../../components/ui/tooltip";
 import DataTable from "../../components/dataTable/DataTable";
 import { getColumns } from "./columns";
-import { useGetCommunityMembersQuery } from "../../services/communityMembers";
+import { useGetCommunityMembersQuery, useLazyGetCommunityMembersQuery } from "../../services/communityMembers";
+
 import { FilterBuilder, useFilterBuilder, applyFilters } from "../../components/filterBuilder";
 
 // ── Filter field definitions for Lead Users table ────────────────────
@@ -82,6 +83,8 @@ export default function LeadUsersPage() {
   // Build API params from filter state
   const apiFilterParams = filterBuilder.apiParams;
 
+  const [triggerFetchAll] = useLazyGetCommunityMembersQuery();
+
   const { data, isFetching, error } = useGetCommunityMembersQuery({
     page: paginationState.pageIndex + 1,
     limit: paginationState.pageSize,
@@ -93,6 +96,19 @@ export default function LeadUsersPage() {
   const rawMembers = data?.data || [];
   const totalItems = data?.count || 0;
   const onlineCount = rawMembers.filter((m) => m.isOnline).length;
+  const totalCount = totalItems;
+
+  // Fetch ALL rows for export (all pages)
+  const fetchAllRows = useCallback(async () => {
+    const result = await triggerFetchAll({
+      page: 1,
+      limit: totalCount || 10000,
+      search: debouncedSearch,
+      membership: "nonsubscribe",
+      ...apiFilterParams,
+    }).unwrap();
+    return result?.data || [];
+  }, [triggerFetchAll, totalCount, debouncedSearch, apiFilterParams]);
 
   // Apply client-side advanced filters (for conditions the API can't handle)
   const members = useMemo(() => {
@@ -218,6 +234,7 @@ export default function LeadUsersPage() {
           row="lead"
           bulkActions={true}
           showExport={true}
+          fetchAllRows={fetchAllRows}
           showColumnVisibility={true}
           showPagination={true}
         />

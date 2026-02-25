@@ -35,6 +35,7 @@ export const communityMembersApi = api.injectEndpoints({
 
 export const {
   useGetCommunityMembersQuery,
+  useLazyGetCommunityMembersQuery,
   useGetCommunityMembersSuggestionsQuery,
   useDeleteLeadUserMutation,
   useExportCommunityMembersMutation,

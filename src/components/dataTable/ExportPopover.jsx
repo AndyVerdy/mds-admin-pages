@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Download, FileSpreadsheet, FileText } from "lucide-react";
+import { Download, FileSpreadsheet, FileText, Loader2 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Checkbox } from "../ui/checkbox";
@@ -19,11 +19,11 @@ function getExportableColumns(table, onlyVisible) {
   );
 }
 
-function getExportRows(table, onlySelected) {
-  if (onlySelected) {
+function getExportRows(table, mode) {
+  if (mode === "selected") {
     return table.getSelectedRowModel().rows.map((r) => r.original);
   }
-  // all rows on current page
+  // current page rows
   return table.getRowModel().rows.map((r) => r.original);
 }
 
@@ -81,20 +81,36 @@ function exportExcel(matrix, filename) {
 }
 
 // ── component ────────────────────────────────────────────────────────
-export default function ExportPopover({ table, row = "data" }) {
+export default function ExportPopover({ table, row = "data", fetchAllRows }) {
   const [open, setOpen] = useState(false);
   const [format, setFormat] = useState("csv"); // "csv" | "xlsx"
   const [colMode, setColMode] = useState("visible"); // "all" | "visible"
-  const [rowMode, setRowMode] = useState("all"); // "all" | "selected"
+  const [rowMode, setRowMode] = useState("allPages"); // "allPages" | "currentPage" | "selected"
+  const [exporting, setExporting] = useState(false);
 
   const hasSelection =
     table.getSelectedRowModel().rows.length > 0;
 
-  const handleExport = () => {
+  const handleExport = async () => {
     const columns = getExportableColumns(table, colMode === "visible");
-    const rows = getExportRows(table, rowMode === "selected");
 
-    if (rows.length === 0) return;
+    let rows;
+    if (rowMode === "allPages" && fetchAllRows) {
+      // Fetch ALL data from the API
+      setExporting(true);
+      try {
+        rows = await fetchAllRows();
+      } catch (err) {
+        console.error("Failed to fetch all rows for export:", err);
+        setExporting(false);
+        return;
+      }
+      setExporting(false);
+    } else {
+      rows = getExportRows(table, rowMode);
+    }
+
+    if (!rows || rows.length === 0) return;
 
     const matrix = buildMatrix(rows, columns);
     const filename = `${row}-export-${new Date().toISOString().slice(0, 10)}`;
@@ -190,13 +206,23 @@ export default function ExportPopover({ table, row = "data" }) {
               Rows
             </p>
             <div className="space-y-1.5">
+              {fetchAllRows && (
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox
+                    className="!rounded-full"
+                    checked={rowMode === "allPages"}
+                    onCheckedChange={() => setRowMode("allPages")}
+                  />
+                  <span className="text-sm">All rows (all pages)</span>
+                </label>
+              )}
               <label className="flex items-center gap-2 cursor-pointer">
                 <Checkbox
                   className="!rounded-full"
-                  checked={rowMode === "all"}
-                  onCheckedChange={() => setRowMode("all")}
+                  checked={rowMode === "currentPage"}
+                  onCheckedChange={() => setRowMode("currentPage")}
                 />
-                <span className="text-sm">All rows on current page</span>
+                <span className="text-sm">Current page only</span>
               </label>
               <label
                 className={`flex items-center gap-2 ${
@@ -223,9 +249,18 @@ export default function ExportPopover({ table, row = "data" }) {
           </div>
 
           {/* Export button */}
-          <Button onClick={handleExport} className="w-full" size="sm">
-            <Download className="w-4 h-4 mr-1.5" />
-            Export {format === "csv" ? "CSV" : "Excel"}
+          <Button
+            onClick={handleExport}
+            className="w-full"
+            size="sm"
+            disabled={exporting}
+          >
+            {exporting ? (
+              <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4 mr-1.5" />
+            )}
+            {exporting ? "Exporting..." : `Export ${format === "csv" ? "CSV" : "Excel"}`}
           </Button>
         </div>
       </PopoverContent>

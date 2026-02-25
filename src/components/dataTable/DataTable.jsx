@@ -104,6 +104,7 @@ const DataTable = ({
   showExport = true,
   showColumnVisibility = true,
   showPagination = true,
+  fetchAllRows,
   enableColumnReorder = true,
   columnVisibility: externalColumnVisibility,
   setColumnVisibility: externalSetColumnVisibility,
@@ -344,7 +345,7 @@ const DataTable = ({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {showExport && (
-            <ExportPopover table={table} row={row} />
+            <ExportPopover table={table} row={row} fetchAllRows={fetchAllRows} />
           )}
           {showColumnVisibility && (
             <DropdownMenu>

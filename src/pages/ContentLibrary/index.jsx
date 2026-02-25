@@ -6,6 +6,7 @@ import DataTable from "../../components/dataTable/DataTable";
 import { getColumns } from "./columns";
 import {
   useGetVideosQuery,
+  useLazyGetVideosQuery,
   useGetCategoriesQuery,
   useGetTagsQuery,
 } from "../../services/videos";
@@ -149,11 +150,25 @@ export default function ContentLibraryPage() {
     ...apiFilterParams,
   });
 
+  const [triggerFetchAll] = useLazyGetVideosQuery();
+
   // Extract data
   const rawVideos =
     videosData?.data?.[0]?.videos || videosData?.data || [];
   const totalItems =
     videosData?.data?.[0]?.totalVideos || videosData?.count || 0;
+
+  // Fetch ALL rows for export (all pages)
+  const fetchAllRows = useCallback(async () => {
+    const result = await triggerFetchAll({
+      page: 1,
+      limit: totalItems || 10000,
+      search: debouncedSearch,
+      ...apiFilterParams,
+    }).unwrap();
+    const allVideos = result?.data?.[0]?.videos || result?.data || [];
+    return allVideos;
+  }, [triggerFetchAll, totalItems, debouncedSearch, apiFilterParams]);
 
   // Apply client-side advanced filters
   const videos = useMemo(() => {
@@ -262,6 +277,7 @@ export default function ContentLibraryPage() {
           row="video"
           bulkActions={true}
           showExport={true}
+          fetchAllRows={fetchAllRows}
           showColumnVisibility={true}
           showPagination={true}
         />
